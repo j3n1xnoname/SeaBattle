@@ -3,7 +3,8 @@
 enum GameStates
 {
     STATE_SHIP_PLACEMENT,
-    STATE_BATTLE
+    STATE_BATTLE,
+    STATE_WINNER
 
 };
 

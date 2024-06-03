@@ -20,7 +20,9 @@ public:
     bool isPossibleToPlaceShip(Ship &, int, int, Player &, std::vector<std::vector<Rectangle>> &map);
     void inaccessibleAreaInRed(Ship &);
     void repaintingRed(Ship &, int, int);
-    void deleteEverythingDeadShip(Ship &);
+    void deleteEverythingDeadShip(Ship &, Player &, std::vector<std::vector<Rectangle>> &);
+    void updateStateBattle(Player &, std::vector<std::vector<Rectangle>> &);
+    void markDeadPLayer(Player &);
 
     void drawMap(std::vector<std::vector<Rectangle>> &);
     void drawShips(Player &);
@@ -28,9 +30,6 @@ public:
     void loadFonts();
 
     void fillBot();
-
-    // Rectangle map[10][10];
-    // Rectangle map2[10][10];
 
     std::vector<std::vector<Rectangle>> map;
     std::vector<std::vector<Rectangle>> map2;
@@ -42,6 +41,7 @@ private:
     static const int COUNT_FONTS = 1;
     std::vector<Font> fonts;
     bool nextState = false;
+    bool nextBattleState = false;
 
     Player player = Player{};
     Player bot = Player{};
@@ -53,4 +53,10 @@ private:
     Vector2 mousePoint;
     bool isMove = false;
     int dX = 0, dY = 0;
+
+    // bot
+    int iCurrentMove, jCurrentMove;
+    int iPrevMove = -1, jPrevMove = -1;
+    bool gotHit = false;
+    std::vector<std::pair<int, int>> emptyCellsBot;
 };

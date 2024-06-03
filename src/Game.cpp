@@ -96,6 +96,18 @@ void Game::init()
     loadFonts();
 
     fillBot();
+
+    // fill emptyCellsBot
+    for (int i = 0; i < MAP_SIZE; i++)
+    {
+        for (int j = 0; j < MAP_SIZE; j++)
+        {
+            if (bot.field[i][j] == 0 || bot.field[i][j] == 1)
+            {
+                emptyCellsBot.push_back({i, j});
+            }
+        }
+    }
 }
 
 void Game::close()
@@ -151,15 +163,61 @@ void Game::handle()
             int coordY = (mousePoint.x - map2[0][0].x) / 50;
             int coordX = (mousePoint.y - map2[0][0].y) / 50;
 
+            int temp = 0;
+            for (int i = 0; i < MAP_SIZE; i++)
+            {
+                for (int j = 0; j < MAP_SIZE; j++)
+                {
+                    if (CheckCollisionPointRec(Vector2{mousePoint.x, mousePoint.y}, map2[i][j]))
+                    {
+                        temp++;
+                    }
+                }
+            }
+
+            bool flag = false;
+            if (temp > 0)
+                flag = true;
+
             for (int i = 0; i <= 9; i++)
             {
 
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(Vector2{mousePoint.x, mousePoint.y}, bot.ships[i].rect) && bot.alive && bot.field[coordX][coordY] == 1)
+                if (flag && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(Vector2{mousePoint.x, mousePoint.y}, bot.ships[i].rect) && bot.alive && bot.field[coordX][coordY] == 1)
                 {
+
                     bot.field[coordX][coordY] = 2;
+
                     break;
                 }
             }
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && bot.field[coordX][coordY] == 0 && flag)
+            {
+                bot.field[coordX][coordY] = 4;
+                nextBattleState = true;
+            }
+        }
+        else if (currentBattleState == BATTLE_STATE_BOT)
+        {
+            /*
+            int iCurrentMove, jCurrentMove;
+            int iPrevMove = -1, jPrevMove = -1;
+            */
+            int ind = rand() % emptyCellsBot.size();
+            iCurrentMove = emptyCellsBot[ind].first;
+            jCurrentMove = emptyCellsBot[ind].second;
+            if (player.field[iCurrentMove][jCurrentMove] == 1)
+            {
+                player.field[iCurrentMove][jCurrentMove] = 2;
+                gotHit = true;
+            }
+            else if (player.field[iCurrentMove][jCurrentMove] == 0)
+            {
+                player.field[iCurrentMove][jCurrentMove] = 4;
+                nextBattleState = true;
+            }
+
+            emptyCellsBot.erase(emptyCellsBot.begin() + ind);
         }
         break;
     }
@@ -169,62 +227,21 @@ void Game::handle()
 void Game::update()
 {
 
-    // switch (currentGlobalState)
-    // {
-    // case STATE_BATTLE:
-    // {
-    //     if (currentBattleState == BATTLE_STATE_PLAYER)
-    //     {
-    //         int temp = 0;
+    switch (currentGlobalState)
+    {
+    case STATE_BATTLE:
+    {
 
-    //         for (int i = 0; i <= 9; i++)
-    //         {
-    //             temp = 0;
-    //             if (bot.ships[i].rect.height >= bot.ships[i].rect.width)
-    //             {
-    //                 for (int iInd = bot.ships[i].rect.x; iInd <= bot.ships[i].shipParts + iInd - 1; iInd++)
-    //                 {
-    //                     if (bot.field[iInd][(int)bot.ships[i].rect.y] == 2)
-    //                     {
-    //                         temp++;
-    //                     }
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 for (int jInd = bot.ships[i].rect.y; jInd <= bot.ships[i].shipParts + jInd - 1; jInd++)
-    //                 {
-    //                     if (bot.field[(int)bot.ships[i].rect.x][jInd] == 2)
-    //                     {
-    //                         temp++;
-    //                     }
-    //                 }
-    //             }
+        updateStateBattle(player, map);
 
-    //             if (temp == bot.ships[i].shipParts)
-    //             {
-    //                 bot.ships[i].isAfloat = false;
-    //                 deleteEverythingDeadShip(bot.ships[i]);
-    //             }
-    //         }
+        updateStateBattle(bot, map2);
 
-    //         temp = 0;
-    //         for (int i = 0; i <= 9; i++)
-    //         {
-    //             if (!bot.ships[i].isAfloat)
-    //             {
-    //                 temp++;
-    //             }
-    //         }
+        markDeadPLayer(player);
+        markDeadPLayer(bot);
 
-    //         if (temp >= 10)
-    //         {
-    //             bot.alive = false;
-    //         }
-    //     }
-    //     break;
-    // }
-    // }
+        break;
+    }
+    }
 }
 
 void Game::display()
@@ -269,13 +286,57 @@ void Game::display()
                 {
                     DrawRectangleRec(map2[i][j], Color{255, 0, 0, 255});
                 }
+                else if (bot.field[i][j] == 4)
+                {
+                    DrawRectangleRec(map2[i][j], Color{200, 100, 255, 255});
+                }
             }
         }
+
+        for (int i = 0; i < MAP_SIZE; i++)
+        {
+            for (int j = 0; j < MAP_SIZE; j++)
+            {
+                if (player.field[i][j] == 2)
+                {
+                    DrawRectangleRec(map[i][j], Color{255, 178, 25, 255});
+                }
+                else if (player.field[i][j] == 3)
+                {
+                    DrawRectangleRec(map[i][j], Color{255, 0, 0, 255});
+                }
+                else if (player.field[i][j] == 4)
+                {
+                    DrawRectangleRec(map[i][j], Color{200, 100, 255, 255});
+                }
+            }
+        }
+
+        break;
+    }
+    case STATE_WINNER:
+    {
+        std::string tempString;
+        if (player.alive)
+        {
+            tempString = "Player WINS!";
+        }
+        else
+        {
+            tempString = "Bot WINS!";
+        }
+        DrawTextEx(fonts[FONT_PACMAN], tempString.c_str(), Vector2{SCREEN_WIDTH * 7 / 16, SCREEN_HEIGHT / 2}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
         break;
     }
     }
 
     EndDrawing();
+
+    if ((nextBattleState && currentBattleState == BATTLE_STATE_PLAYER) || gotHit)
+    {
+        // UPDATE LATER!
+        // WaitTime(2);
+    }
 }
 
 void Game::stateTransition()
@@ -301,6 +362,26 @@ void Game::stateTransition()
         {
             nextState = true;
         }
+        break;
+    }
+    case STATE_BATTLE:
+    {
+        gotHit = false;
+        if (nextBattleState)
+        {
+            currentBattleState = (BattleStates)((int)currentBattleState + 1);
+            if (currentBattleState > BATTLE_STATE_BOT)
+            {
+                currentBattleState = BATTLE_STATE_PLAYER;
+            }
+            nextBattleState = false;
+        }
+
+        if (!player.alive || !bot.alive)
+        {
+            nextState = true;
+        }
+
         break;
     }
     }
@@ -564,12 +645,11 @@ void Game::drawShips(Player &player)
     }
 }
 
-void Game::deleteEverythingDeadShip(Ship &ship)
+void Game::deleteEverythingDeadShip(Ship &ship, Player &player, std::vector<std::vector<Rectangle>> &map)
 {
 
-    int iInd = ship.rect.x;
-
-    int jInd = ship.rect.y;
+    int iInd = (ship.rect.y - map[0][0].y) / 50;
+    int jInd = (ship.rect.x - map[0][0].x) / 50;
 
     int iIndEnd = iInd;
     int jIndEnd = jInd;
@@ -588,42 +668,95 @@ void Game::deleteEverythingDeadShip(Ship &ship)
         for (int j = jInd; j <= jIndEnd; j++)
         {
 
-            bot.field[i][j] == 3;
+            player.field[i][j] = 3;
 
             if (i - 1 >= 0)
             {
-                bot.field[i - 1][j] = 3;
+                player.field[i - 1][j] = 3;
             }
 
             if (j - 1 >= 0)
             {
-                bot.field[i][j - 1] = 3;
+                player.field[i][j - 1] = 3;
             }
             if (i + 1 < MAP_SIZE)
             {
-                bot.field[i + 1][j] = 3;
+                player.field[i + 1][j] = 3;
             }
             if (j + 1 < MAP_SIZE)
             {
-                bot.field[i][j + 1] = 3;
+                player.field[i][j + 1] = 3;
             }
 
             if (i - 1 >= 0 && j - 1 >= 0)
             {
-                bot.field[i - 1][j - 1] = 3;
+                player.field[i - 1][j - 1] = 3;
             }
             if (i - 1 >= 0 && j + 1 < MAP_SIZE)
             {
-                bot.field[i - 1][j + 1] = 3;
+                player.field[i - 1][j + 1] = 3;
             }
             if (i + 1 < MAP_SIZE && j + 1 < MAP_SIZE)
             {
-                bot.field[i + 1][j + 1] = 3;
+                player.field[i + 1][j + 1] = 3;
             }
             if (i + 1 < MAP_SIZE && j - 1 >= 0)
             {
-                bot.field[i + 1][j - 1] = 3;
+                player.field[i + 1][j - 1] = 3;
             }
         }
+    }
+}
+
+void Game::updateStateBattle(Player &player, std::vector<std::vector<Rectangle>> &map)
+{
+    int temp;
+    for (int i = 0; i <= 9; i++)
+    {
+        temp = 0;
+        int iInd = (player.ships[i].rect.y - map[0][0].y) / 50;
+        int jInd = (player.ships[i].rect.x - map[0][0].x) / 50;
+        if (player.ships[i].rect.height >= player.ships[i].rect.width)
+        {
+            for (int k = iInd; k <= iInd + player.ships[i].shipParts - 1; k++)
+            {
+                if (player.field[k][jInd] == 2)
+                {
+                    temp++;
+                }
+            }
+        }
+        else
+        {
+            for (int k = jInd; k <= jInd + player.ships[i].shipParts - 1; k++)
+            {
+                if (player.field[iInd][k] == 2)
+                {
+                    temp++;
+                }
+            }
+        }
+
+        if (temp == player.ships[i].shipParts)
+        {
+            deleteEverythingDeadShip(player.ships[i], player, map);
+            player.ships[i].isAfloat = false;
+        }
+    }
+}
+
+void Game::markDeadPLayer(Player &player)
+{
+    int temp = 0;
+    for (int i = 0; i <= 9; i++)
+    {
+        if (!player.ships[i].isAfloat)
+        {
+            temp++;
+        }
+    }
+    if (temp >= 10)
+    {
+        player.alive = false;
     }
 }
