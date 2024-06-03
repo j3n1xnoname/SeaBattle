@@ -17,7 +17,7 @@ public:
     void stateTransition();
 
     void placeShipOnField(Ship &, Player &);
-    bool isPossibleToPlaceShip(Ship &, int, int, Player &, std::vector<std::vector<Rectangle>> &map);
+    bool isPossibleToPlaceShip(Ship &, int, int, Player &, std::vector<std::vector<Rectangle>> &map, bool botPlacement = false);
     void inaccessibleAreaInRed(Ship &);
     void repaintingRed(Ship &, int, int);
     void deleteEverythingDeadShip(Ship &, Player &, std::vector<std::vector<Rectangle>> &);
@@ -26,8 +26,12 @@ public:
 
     void drawMap(std::vector<std::vector<Rectangle>> &);
     void drawShips(Player &);
+    void drawImages(Player &, std::vector<std::vector<Rectangle>> &);
 
     void loadFonts();
+    void loadTextures();
+
+    int findValue(std::pair<int, int> value);
 
     void fillBot();
 
@@ -39,7 +43,11 @@ private:
     static const int SCREEN_HEIGHT = 1080;
     static const int MAP_SIZE = 10;
     static const int COUNT_FONTS = 1;
+    static const int COUNT_IMAGES = 2;
+    static const int COUNT_TEXTURES = 2;
     std::vector<Font> fonts;
+    std::vector<Image> images;
+    std::vector<Texture2D> textures;
     bool nextState = false;
     bool nextBattleState = false;
 

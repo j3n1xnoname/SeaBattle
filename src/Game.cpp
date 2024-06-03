@@ -5,56 +5,23 @@
 
 void Game::fillBot()
 {
-    for (int i = 0; i < MAP_SIZE; i++)
+    for (int i = 0; i <= 9;)
     {
-        int xPos = std::rand() % MAP_SIZE;
-        int yPos = std::rand() % MAP_SIZE;
-        while (bot.field[xPos][yPos] != 0)
+        int ind = rand() % emptyCellsBot.size();
+        int xPos = emptyCellsBot[ind].first;
+        int yPos = emptyCellsBot[ind].second;
+        if (isPossibleToPlaceShip(bot.ships[i], xPos, yPos, bot, map2, true))
         {
-            xPos = std::rand() % MAP_SIZE;
-            yPos = std::rand() % MAP_SIZE;
-        }
-
-        if (isPossibleToPlaceShip(bot.ships[i], xPos, yPos, bot, map2))
-        {
-            continue;
-        }
-
-        std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
-
-        if (isPossibleToPlaceShip(bot.ships[i], xPos, yPos, bot, map2))
-        {
+            i++;
             continue;
         }
         std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
-    }
-
-    for (int i = 0; i <= 9; i++)
-    {
-        if (!bot.ships[i].placedOnField)
+        if (isPossibleToPlaceShip(bot.ships[i], xPos, yPos, bot, map2, true))
         {
-            for (int k = 0; k < MAP_SIZE; k++)
-            {
-                for (int l = 0; l < MAP_SIZE; l++)
-                {
-                    if (isPossibleToPlaceShip(bot.ships[i], k, l, bot, map2))
-                    {
-                        k = MAP_SIZE;
-                        l = MAP_SIZE;
-                        continue;
-                    }
-                    std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
-                    if (isPossibleToPlaceShip(bot.ships[i], k, l, bot, map2))
-                    {
-                        k = MAP_SIZE;
-                        l = MAP_SIZE;
-                        continue;
-                    }
-
-                    std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
-                }
-            }
+            i++;
+            continue;
         }
+        std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
     }
 }
 
@@ -70,6 +37,14 @@ void Game::init()
     {
         map[i].resize(MAP_SIZE);
         map2[i].resize(MAP_SIZE);
+    }
+
+    for (int i = 0; i < MAP_SIZE; i++)
+    {
+        for (int j = 0; j < MAP_SIZE; j++)
+        {
+            emptyCellsBot.push_back({i, j});
+        }
     }
 
     player.init(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -92,11 +67,15 @@ void Game::init()
     }
 
     fonts.resize(COUNT_FONTS);
+    images.resize(COUNT_TEXTURES);
+    textures.resize(COUNT_TEXTURES);
 
     loadFonts();
+    loadTextures();
 
     fillBot();
 
+    emptyCellsBot.clear();
     // fill emptyCellsBot
     for (int i = 0; i < MAP_SIZE; i++)
     {
@@ -112,6 +91,20 @@ void Game::init()
 
 void Game::close()
 {
+    for (int i = 0; i < COUNT_FONTS; i++)
+    {
+        UnloadFont(fonts[i]);
+    }
+
+    for (int i = 0; i < COUNT_IMAGES; i++)
+    {
+        UnloadImage(images[i]);
+    }
+
+    for (int i = 0; i < COUNT_TEXTURES; i++)
+    {
+        UnloadTexture(textures[i]);
+    }
     CloseWindow();
 }
 
@@ -265,52 +258,29 @@ void Game::display()
             }
         }
 
+        DrawText("Press enter to flip a ship", SCREEN_WIDTH * 2 / 30, SCREEN_HEIGHT * 5 / 8, 32, Color{0, 0, 0, 255});
+        DrawText("(when holding it with the mouse)", SCREEN_WIDTH * 2 / 30, SCREEN_HEIGHT * 11 / 16, 32, Color{0, 0, 0, 255});
+
         DrawTextEx(fonts[FONT_PACMAN], "Place the ships on the field", Vector2{SCREEN_WIDTH * 5 / 16, 20}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
         break;
     }
     case STATE_BATTLE:
     {
+        if (currentBattleState == BATTLE_STATE_PLAYER)
+        {
+            DrawTextEx(fonts[FONT_PACMAN], "Player's move...", Vector2{SCREEN_WIDTH * 13 / 32, SCREEN_HEIGHT * 7 / 16}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
+        }
+        else if (currentBattleState == BATTLE_STATE_BOT)
+        {
+            DrawTextEx(fonts[FONT_PACMAN], "Bot's move...", Vector2{SCREEN_WIDTH * 13 / 32, SCREEN_HEIGHT * 7 / 16}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
+        }
         DrawTextEx(fonts[FONT_PACMAN], "Battle!", Vector2{SCREEN_WIDTH * 7 / 16, 20}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
         drawMap(map2);
         drawShips(bot);
 
-        for (int i = 0; i < MAP_SIZE; i++)
-        {
-            for (int j = 0; j < MAP_SIZE; j++)
-            {
-                if (bot.field[i][j] == 2)
-                {
-                    DrawRectangleRec(map2[i][j], Color{255, 178, 25, 255});
-                }
-                else if (bot.field[i][j] == 3)
-                {
-                    DrawRectangleRec(map2[i][j], Color{255, 0, 0, 255});
-                }
-                else if (bot.field[i][j] == 4)
-                {
-                    DrawRectangleRec(map2[i][j], Color{200, 100, 255, 255});
-                }
-            }
-        }
+        drawImages(bot, map2);
 
-        for (int i = 0; i < MAP_SIZE; i++)
-        {
-            for (int j = 0; j < MAP_SIZE; j++)
-            {
-                if (player.field[i][j] == 2)
-                {
-                    DrawRectangleRec(map[i][j], Color{255, 178, 25, 255});
-                }
-                else if (player.field[i][j] == 3)
-                {
-                    DrawRectangleRec(map[i][j], Color{255, 0, 0, 255});
-                }
-                else if (player.field[i][j] == 4)
-                {
-                    DrawRectangleRec(map[i][j], Color{200, 100, 255, 255});
-                }
-            }
-        }
+        drawImages(player, map);
 
         break;
     }
@@ -325,17 +295,21 @@ void Game::display()
         {
             tempString = "Bot WINS!";
         }
-        DrawTextEx(fonts[FONT_PACMAN], tempString.c_str(), Vector2{SCREEN_WIDTH * 7 / 16, SCREEN_HEIGHT / 2}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
+        drawMap(map2);
+        drawShips(bot);
+        DrawTextEx(fonts[FONT_PACMAN], tempString.c_str(), Vector2{SCREEN_WIDTH * 7 / 16, SCREEN_HEIGHT * 14 / 32}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
+        drawImages(bot, map2);
+        drawImages(player, map);
         break;
     }
     }
 
     EndDrawing();
 
-    if ((nextBattleState && currentBattleState == BATTLE_STATE_PLAYER) || gotHit)
+    if (nextBattleState || gotHit)
     {
         // UPDATE LATER!
-        // WaitTime(2);
+        WaitTime(1.5);
     }
 }
 
@@ -414,7 +388,7 @@ void Game::placeShipOnField(Ship &ship, Player &player)
     }
 }
 
-bool Game::isPossibleToPlaceShip(Ship &ship, int iInd, int jInd, Player &player, std::vector<std::vector<Rectangle>> &map)
+bool Game::isPossibleToPlaceShip(Ship &ship, int iInd, int jInd, Player &player, std::vector<std::vector<Rectangle>> &map, bool botPlacement)
 {
     bool success = true;
 
@@ -479,6 +453,89 @@ bool Game::isPossibleToPlaceShip(Ship &ship, int iInd, int jInd, Player &player,
         ship.placedOnField = true;
         ship.rect.x = map[iInd][jInd].x;
         ship.rect.y = map[iInd][jInd].y;
+        if (botPlacement)
+        {
+            for (int i = iInd; i <= iInd + ship.rect.height / 50 - 1; i++)
+            {
+                for (int j = jInd; j <= jInd + ship.rect.width / 50 - 1; j++)
+                {
+
+                    if (player.field[i][j] != 0)
+                    {
+                        int index = findValue({i, j});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+
+                    if (i + 1 < MAP_SIZE && player.field[i + 1][j] != 0)
+                    {
+                        int index = findValue({i + 1, j});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (j + 1 < MAP_SIZE && player.field[i][j + 1] != 0)
+                    {
+                        int index = findValue({i, j + 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (i - 1 >= 0 && player.field[i - 1][j] != 0)
+                    {
+                        int index = findValue({i - 1, j});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (j - 1 >= 0 && player.field[i][j - 1] != 0)
+                    {
+                        int index = findValue({i, j - 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (i - 1 >= 0 && j - 1 >= 0 && player.field[i - 1][j - 1] != 0)
+                    {
+                        int index = findValue({i - 1, j - 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (i - 1 >= 0 && j + 1 < MAP_SIZE && player.field[i - 1][j + 1] != 0)
+                    {
+                        int index = findValue({i - 1, j + 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (i + 1 < MAP_SIZE && j - 1 >= 0 && player.field[i + 1][j - 1] != 0)
+                    {
+                        int index = findValue({i + 1, j - 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                    if (i + 1 < MAP_SIZE && j + 1 < MAP_SIZE && player.field[i + 1][j + 1] != 0)
+                    {
+                        int index = findValue({i + 1, j + 1});
+                        if (index != -1)
+                        {
+                            emptyCellsBot.erase(emptyCellsBot.begin() + index);
+                        }
+                    }
+                }
+            }
+        }
     }
     return success;
 }
@@ -758,5 +815,55 @@ void Game::markDeadPLayer(Player &player)
     if (temp >= 10)
     {
         player.alive = false;
+    }
+}
+
+int Game::findValue(std::pair<int, int> value)
+{
+    for (int i = 0; i < emptyCellsBot.size(); i++)
+    {
+        if (emptyCellsBot[i] == value)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void Game::loadTextures()
+{
+    images[IMAGE_FIRE] = LoadImage("assets/fire.png");
+    ImageCrop(&images[IMAGE_FIRE], Rectangle{134, 143, 37, 42});
+    ImageResize(&images[IMAGE_FIRE], 45, 45);
+    textures[TEXTURE_FIRE] = LoadTextureFromImage(images[IMAGE_FIRE]);
+
+    images[IMAGE_CROSS] = LoadImage("assets/cross.png");
+    ImageCrop(&images[IMAGE_CROSS], Rectangle{89, 205, 736, 714});
+    ImageResize(&images[IMAGE_CROSS], 45, 45);
+    textures[TEXTURE_CROSS] = LoadTextureFromImage(images[IMAGE_CROSS]);
+}
+
+void Game::drawImages(Player &player, std::vector<std::vector<Rectangle>> &map)
+{
+
+    for (int i = 0; i < MAP_SIZE; i++)
+    {
+        for (int j = 0; j < MAP_SIZE; j++)
+        {
+            if (player.field[i][j] == 2)
+            {
+                DrawTexture(textures[TEXTURE_CROSS], map[i][j].x, map[i][j].y, WHITE);
+            }
+            else if (player.field[i][j] == 3)
+            {
+                DrawTexture(textures[TEXTURE_FIRE], map[i][j].x, map[i][j].y, WHITE);
+            }
+            else if (player.field[i][j] == 4)
+            {
+
+                DrawCircle(map[i][j].x + 25, map[i][j].y + 25, 12, Color{0, 0, 0, 255});
+            }
+        }
     }
 }
