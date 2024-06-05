@@ -23,12 +23,20 @@ enum ImagesIndexes
 {
     IMAGE_FIRE,
     IMAGE_CROSS,
-    IMAGE_WATER
+    IMAGE_WATER,
+    IMAGE_SHIP_1,
+    IMAGE_SHIP_2,
+    IMAGE_SHIP_3,
+    IMAGE_SHIP_4
 };
 
 enum TexturesIndexes
 {
     TEXTURE_FIRE,
     TEXTURE_CROSS,
-    TEXTURE_WATER
+    TEXTURE_WATER,
+    TEXTURE_SHIP_1,
+    TEXTURE_SHIP_2,
+    TEXTURE_SHIP_3,
+    TEXTURE_SHIP_4
 };

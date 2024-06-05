@@ -5,6 +5,7 @@ Ship::Ship()
     isAfloat = true;
     placedOnField = false;
     isMove = false;
+    verticalPos = true;
 }
 
 Ship::~Ship() {}

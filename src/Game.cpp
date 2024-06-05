@@ -16,12 +16,14 @@ void Game::fillBot()
             continue;
         }
         std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
+        bot.ships[i].verticalPos = false;
         if (isPossibleToPlaceShip(bot.ships[i], xPos, yPos, bot, map2, true))
         {
             i++;
             continue;
         }
         std::swap(bot.ships[i].rect.height, bot.ships[i].rect.width);
+        bot.ships[i].verticalPos = true;
     }
 }
 
@@ -142,6 +144,14 @@ void Game::handle()
                 if (IsKeyPressed(KEY_SPACE))
                 {
                     std::swap(player.ships[i].rect.height, player.ships[i].rect.width);
+                    if (player.ships[i].verticalPos)
+                    {
+                        player.ships[i].verticalPos = false;
+                    }
+                    else
+                    {
+                        player.ships[i].verticalPos = true;
+                    }
                 }
             }
         }
@@ -707,7 +717,60 @@ void Game::drawShips(Player &player, bool hideShips)
         if (!hideShips || !player.ships[i].isAfloat)
         {
             Rectangle tempRect = player.ships[i].rect;
-            DrawRectangleRec(tempRect, Color{0, 0, 0, 255});
+            // DrawRectangleRec(tempRect, Color{0, 0, 0, 255});
+
+            switch (player.ships[i].shipParts)
+            {
+            case 1:
+            {
+
+                if (player.ships[i].verticalPos)
+                {
+                    DrawTexture(textures[TEXTURE_SHIP_1], tempRect.x, tempRect.y, WHITE);
+                }
+                else
+                {
+                    DrawTextureEx(textures[TEXTURE_SHIP_1], Vector2{tempRect.x, tempRect.y + textures[TEXTURE_SHIP_1].width}, -90, 1, WHITE);
+                }
+                break;
+            }
+            case 2:
+            {
+                if (player.ships[i].verticalPos)
+                {
+                    DrawTexture(textures[TEXTURE_SHIP_2], tempRect.x, tempRect.y, WHITE);
+                }
+                else
+                {
+                    DrawTextureEx(textures[TEXTURE_SHIP_2], Vector2{tempRect.x, tempRect.y + textures[TEXTURE_SHIP_2].width}, -90, 1, WHITE);
+                }
+                break;
+            }
+            case 3:
+            {
+                if (player.ships[i].verticalPos)
+                {
+                    DrawTexture(textures[TEXTURE_SHIP_3], tempRect.x, tempRect.y, WHITE);
+                }
+                else
+                {
+                    DrawTextureEx(textures[TEXTURE_SHIP_3], Vector2{tempRect.x, tempRect.y + textures[TEXTURE_SHIP_3].width}, -90, 1, WHITE);
+                }
+                break;
+            }
+            case 4:
+            {
+                if (player.ships[i].verticalPos)
+                {
+                    DrawTexture(textures[TEXTURE_SHIP_4], tempRect.x, tempRect.y, WHITE);
+                }
+                else
+                {
+                    DrawTextureEx(textures[TEXTURE_SHIP_4], Vector2{tempRect.x, tempRect.y + textures[TEXTURE_SHIP_4].width}, -90, 1, WHITE);
+                }
+                break;
+            }
+            }
         }
     }
 }
@@ -857,6 +920,26 @@ void Game::loadTextures()
     ImageCrop(&images[IMAGE_WATER], Rectangle{80, 0, 15, 15}); // 80 0 15 15
     ImageResize(&images[IMAGE_WATER], 25, 25);
     textures[TEXTURE_WATER] = LoadTextureFromImage(images[IMAGE_WATER]);
+
+    images[IMAGE_SHIP_1] = LoadImage("assets/ships.png");
+    ImageCrop(&images[IMAGE_SHIP_1], Rectangle{1, 1, 29, 60});
+    ImageResize(&images[IMAGE_SHIP_1], 50, 50);
+    textures[TEXTURE_SHIP_1] = LoadTextureFromImage(images[IMAGE_SHIP_1]);
+
+    images[IMAGE_SHIP_2] = LoadImage("assets/ships.png");
+    ImageCrop(&images[IMAGE_SHIP_2], Rectangle{76, 1, 29, 91});
+    ImageResize(&images[IMAGE_SHIP_2], 50, 100);
+    textures[TEXTURE_SHIP_2] = LoadTextureFromImage(images[IMAGE_SHIP_2]);
+
+    images[IMAGE_SHIP_3] = LoadImage("assets/ships.png");
+    ImageCrop(&images[IMAGE_SHIP_3], Rectangle{113, 1, 29, 122});
+    ImageResize(&images[IMAGE_SHIP_3], 50, 150);
+    textures[TEXTURE_SHIP_3] = LoadTextureFromImage(images[IMAGE_SHIP_3]);
+
+    images[IMAGE_SHIP_4] = LoadImage("assets/ships.png");
+    ImageCrop(&images[IMAGE_SHIP_4], Rectangle{151, 1, 29, 153});
+    ImageResize(&images[IMAGE_SHIP_4], 50, 200);
+    textures[TEXTURE_SHIP_4] = LoadTextureFromImage(images[IMAGE_SHIP_4]);
 }
 
 void Game::drawImages(Player &player, std::vector<std::vector<Rectangle>> &map)

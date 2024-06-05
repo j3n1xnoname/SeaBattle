@@ -43,8 +43,8 @@ private:
     static const int SCREEN_HEIGHT = 1080;
     static const int MAP_SIZE = 10;
     static const int COUNT_FONTS = 1;
-    static const int COUNT_IMAGES = 3;
-    static const int COUNT_TEXTURES = 3;
+    static const int COUNT_IMAGES = 7;
+    static const int COUNT_TEXTURES = 7;
     std::vector<Font> fonts;
     std::vector<Image> images;
     std::vector<Texture2D> textures;

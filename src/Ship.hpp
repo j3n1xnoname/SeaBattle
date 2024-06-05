@@ -12,4 +12,5 @@ public:
     bool isAfloat;
     bool placedOnField;
     bool isMove;
+    bool verticalPos;
 };
