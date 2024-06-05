@@ -242,9 +242,8 @@ void Game::display()
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    drawShips(player);
-
     drawMap(map);
+    drawShips(player);
 
     switch (currentGlobalState)
     {
@@ -628,6 +627,14 @@ void Game::drawMap(std::vector<std::vector<Rectangle>> &map)
     {
         for (int j = 0; j < MAP_SIZE; j++)
         {
+            for (int l = 0; l < 2; l++)
+            {
+                for (int k = 0; k < 2; k++)
+                {
+                    DrawTexture(textures[TEXTURE_WATER], map[i][j].x + l * 25, map[i][j].y + k * 25, WHITE);
+                }
+            }
+            // DrawTexture(textures[TEXTURE_WATER], map[i][j].x, map[i][j].y, WHITE);
             DrawRectangleLinesEx(map[i][j], 1.5, Color{0, 0, 0, 255});
         }
     }
@@ -842,6 +849,11 @@ void Game::loadTextures()
     ImageCrop(&images[IMAGE_CROSS], Rectangle{89, 205, 736, 714});
     ImageResize(&images[IMAGE_CROSS], 45, 45);
     textures[TEXTURE_CROSS] = LoadTextureFromImage(images[IMAGE_CROSS]);
+
+    images[IMAGE_WATER] = LoadImage("assets/water.png");
+    ImageCrop(&images[IMAGE_WATER], Rectangle{80, 0, 15, 15}); // 80 0 15 15
+    ImageResize(&images[IMAGE_WATER], 25, 25);
+    textures[TEXTURE_WATER] = LoadTextureFromImage(images[IMAGE_WATER]);
 }
 
 void Game::drawImages(Player &player, std::vector<std::vector<Rectangle>> &map)

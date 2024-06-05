@@ -22,11 +22,13 @@ enum BattleStates
 enum ImagesIndexes
 {
     IMAGE_FIRE,
-    IMAGE_CROSS
+    IMAGE_CROSS,
+    IMAGE_WATER
 };
 
 enum TexturesIndexes
 {
     TEXTURE_FIRE,
-    TEXTURE_CROSS
+    TEXTURE_CROSS,
+    TEXTURE_WATER
 };
