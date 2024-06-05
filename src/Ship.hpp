@@ -6,7 +6,6 @@ struct Ship
 public:
     Ship();
     ~Ship();
-    void init();
 
     int shipParts;
     Rectangle rect;

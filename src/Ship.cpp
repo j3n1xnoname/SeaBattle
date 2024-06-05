@@ -8,7 +8,3 @@ Ship::Ship()
 }
 
 Ship::~Ship() {}
-
-void Ship::init()
-{
-}

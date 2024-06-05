@@ -275,7 +275,7 @@ void Game::display()
         }
         DrawTextEx(fonts[FONT_PACMAN], "Battle!", Vector2{SCREEN_WIDTH * 7 / 16, 20}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
         drawMap(map2);
-        drawShips(bot);
+        drawShips(bot, true);
 
         drawImages(bot, map2);
 
@@ -700,12 +700,15 @@ void Game::drawMap(std::vector<std::vector<Rectangle>> &map)
     }
 }
 
-void Game::drawShips(Player &player)
+void Game::drawShips(Player &player, bool hideShips)
 {
     for (int i = 0; i <= 9; i++)
     {
-        Rectangle tempRect = player.ships[i].rect;
-        DrawRectangleRec(tempRect, Color{0, 0, 0, 255});
+        if (!hideShips || !player.ships[i].isAfloat)
+        {
+            Rectangle tempRect = player.ships[i].rect;
+            DrawRectangleRec(tempRect, Color{0, 0, 0, 255});
+        }
     }
 }
 

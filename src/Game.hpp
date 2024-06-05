@@ -25,7 +25,7 @@ public:
     void markDeadPLayer(Player &);
 
     void drawMap(std::vector<std::vector<Rectangle>> &);
-    void drawShips(Player &);
+    void drawShips(Player &, bool hideShips = false);
     void drawImages(Player &, std::vector<std::vector<Rectangle>> &);
 
     void loadFonts();
