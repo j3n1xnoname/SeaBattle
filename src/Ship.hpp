@@ -13,4 +13,5 @@ public:
     bool placedOnField;
     bool isMove;
     bool verticalPos;
+    bool isHitted;
 };

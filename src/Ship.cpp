@@ -6,6 +6,7 @@ Ship::Ship()
     placedOnField = false;
     isMove = false;
     verticalPos = true;
+    isHitted = false;
 }
 
 Ship::~Ship() {}

@@ -33,6 +33,10 @@ void Game::init()
 
     SetTargetFPS(60);
 
+    Mix_Init(MIX_INIT_MP3 | MIX_INIT_WAVPACK);
+
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+
     map.resize(MAP_SIZE);
     map2.resize(MAP_SIZE);
     for (int i = 0; i < MAP_SIZE; i++)
@@ -71,9 +75,12 @@ void Game::init()
     fonts.resize(COUNT_FONTS);
     images.resize(COUNT_TEXTURES);
     textures.resize(COUNT_TEXTURES);
+    musics.resize(COUNT_MUSICS);
+    chunks.resize(COUNT_CHUNKS);
 
     loadFonts();
     loadTextures();
+    loadMusics();
 
     fillBot();
 
@@ -107,11 +114,25 @@ void Game::close()
     {
         UnloadTexture(textures[i]);
     }
+
+    for (int i = 0; i < COUNT_MUSICS; i++)
+    {
+        Mix_FreeMusic(musics[i]);
+        musics[i] = nullptr;
+    }
+    for (int i = 0; i < COUNT_CHUNKS; i++)
+    {
+        Mix_FreeChunk(chunks[i]);
+        chunks[i] = nullptr;
+    }
+
     CloseWindow();
+    Mix_Quit();
 }
 
 void Game::handle()
 {
+
     switch (currentGlobalState)
     {
     case STATE_SHIP_PLACEMENT:
@@ -189,7 +210,10 @@ void Game::handle()
                 {
 
                     bot.field[coordX][coordY] = 2;
+                    shout = true;
+                    explosion = true;
 
+                    gotHit = true;
                     break;
                 }
             }
@@ -197,6 +221,7 @@ void Game::handle()
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && bot.field[coordX][coordY] == 0 && flag)
             {
                 bot.field[coordX][coordY] = 4;
+                shout = true;
                 nextBattleState = true;
             }
         }
@@ -213,15 +238,22 @@ void Game::handle()
             {
                 player.field[iCurrentMove][jCurrentMove] = 2;
                 gotHit = true;
+                projectileInShip = true;
+                explosion = true;
             }
             else if (player.field[iCurrentMove][jCurrentMove] == 0)
             {
                 player.field[iCurrentMove][jCurrentMove] = 4;
                 nextBattleState = true;
+                projectileInShip = true;
             }
 
             emptyCellsBot.erase(emptyCellsBot.begin() + ind);
         }
+        break;
+    }
+    case STATE_WINNER:
+    {
         break;
     }
     }
@@ -249,6 +281,7 @@ void Game::update()
 
 void Game::display()
 {
+
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
@@ -275,6 +308,7 @@ void Game::display()
     }
     case STATE_BATTLE:
     {
+        drawRemainingShips();
         if (currentBattleState == BATTLE_STATE_PLAYER)
         {
             DrawTextEx(fonts[FONT_PACMAN], "Player's move...", Vector2{SCREEN_WIDTH * 13 / 32, SCREEN_HEIGHT * 7 / 16}, fonts[FONT_PACMAN].baseSize, 0, Color{0, 0, 0, 255});
@@ -295,6 +329,7 @@ void Game::display()
     }
     case STATE_WINNER:
     {
+        drawRemainingShips();
         std::string tempString;
         if (player.alive)
         {
@@ -317,13 +352,15 @@ void Game::display()
 
     if (nextBattleState || gotHit)
     {
-        // UPDATE LATER!
-        WaitTime(1.5);
+        WaitTime(2);
     }
 }
 
 void Game::stateTransition()
 {
+    shout = false;
+    projectileInShip = false;
+    explosion = false;
     switch (currentGlobalState)
     {
     case STATE_SHIP_PLACEMENT:
@@ -697,7 +734,7 @@ void Game::drawMap(std::vector<std::vector<Rectangle>> &map)
         }
         case 'I':
         {
-            tempString = "A";
+            tempString = "I";
             break;
         }
         case 'J':
@@ -852,6 +889,7 @@ void Game::updateStateBattle(Player &player, std::vector<std::vector<Rectangle>>
             {
                 if (player.field[k][jInd] == 2)
                 {
+                    player.ships[i].isHitted = true;
                     temp++;
                 }
             }
@@ -862,6 +900,7 @@ void Game::updateStateBattle(Player &player, std::vector<std::vector<Rectangle>>
             {
                 if (player.field[iInd][k] == 2)
                 {
+                    player.ships[i].isHitted = true;
                     temp++;
                 }
             }
@@ -871,6 +910,7 @@ void Game::updateStateBattle(Player &player, std::vector<std::vector<Rectangle>>
         {
             deleteEverythingDeadShip(player.ships[i], player, map);
             player.ships[i].isAfloat = false;
+            player.ships[i].isHitted = false;
         }
     }
 }
@@ -962,6 +1002,134 @@ void Game::drawImages(Player &player, std::vector<std::vector<Rectangle>> &map)
 
                 DrawCircle(map[i][j].x + 25, map[i][j].y + 25, 12, Color{0, 0, 0, 255});
             }
+        }
+    }
+}
+
+void Game::loadMusics()
+{
+    musics[MUSIC_SEA] = Mix_LoadMUS("assets/Sounds/sea.mp3");
+
+    chunks[CHUNK_SIREN] = Mix_LoadWAV("assets/Sounds/siren.mp3");
+    chunks[CHUNK_SHOUT] = Mix_LoadWAV("assets/Sounds/shout.mp3");
+    chunks[CHUNK_SKY] = Mix_LoadWAV("assets/Sounds/sky.mp3");
+    chunks[CHUNK_EXPLOSION] = Mix_LoadWAV("assets/Sounds/explosion.mp3");
+}
+
+void Game::playSounds()
+{
+    if (currentGlobalState == STATE_BATTLE)
+    {
+
+        if (shout)
+        {
+            Mix_PlayChannelTimed(CHANNEL_SHOUT, chunks[CHUNK_SHOUT], 0, 2000);
+        }
+
+        if (projectileInShip)
+        {
+            Mix_PlayChannel(CHANNEL_SKY, chunks[CHUNK_SKY], 0);
+        }
+
+        if (explosion)
+        {
+            SDL_Delay(2000);
+            Mix_PlayChannel(CHANNEL_EXPLOSION, chunks[CHUNK_EXPLOSION], 0);
+        }
+
+        bool flag = false;
+        for (int i = 0; i <= 9; i++)
+        {
+            if (player.ships[i].isHitted)
+            {
+                flag = true;
+            }
+        }
+
+        if (flag)
+        {
+            if (!Mix_Playing(CHANNEL_SIREN))
+            {
+                Mix_PlayChannel(CHANNEL_SIREN, chunks[CHUNK_SIREN], -1);
+            }
+        }
+        else
+        {
+            if (Mix_Playing(CHANNEL_SIREN))
+            {
+                Mix_HaltChannel(CHANNEL_SIREN);
+            }
+        }
+    }
+    else if (currentGlobalState == STATE_WINNER)
+    {
+        if (Mix_Playing(CHANNEL_SIREN))
+        {
+            Mix_HaltChannel(CHANNEL_SIREN);
+        }
+    }
+}
+
+void Game::drawRemainingShips()
+{
+    for (int i = 0; i <= 3; i++)
+    {
+        DrawTexture(textures[TEXTURE_SHIP_1], SCREEN_WIDTH * 3 * (i + 1) / 60, SCREEN_HEIGHT * 10 / 16, WHITE);
+        DrawTexture(textures[TEXTURE_SHIP_1], SCREEN_WIDTH * 3 * (i + 1 + 13) / 60 - textures[TEXTURE_SHIP_1].width, SCREEN_HEIGHT * 10 / 16, WHITE);
+        if (!player.ships[i].isAfloat)
+        {
+            DrawTexture(textures[TEXTURE_CROSS], SCREEN_WIDTH * 3 * (i + 1) / 60, SCREEN_HEIGHT * 10 / 16, WHITE);
+        }
+
+        if (!bot.ships[i].isAfloat)
+        {
+            DrawTexture(textures[TEXTURE_CROSS], SCREEN_WIDTH * 3 * (i + 1 + 13) / 60, SCREEN_HEIGHT * 10 / 16, WHITE);
+        }
+    }
+    for (int i = 4; i <= 6; i++)
+    {
+        DrawTexture(textures[TEXTURE_SHIP_2], SCREEN_WIDTH * 3 * (i + 1 - 4) / 60, SCREEN_HEIGHT * 22 / 32, WHITE);
+        DrawTexture(textures[TEXTURE_SHIP_2], SCREEN_WIDTH * 3 * (i + 1 + 13 - 4) / 60 - textures[TEXTURE_SHIP_1].width, SCREEN_HEIGHT * 22 / 32, WHITE);
+
+        if (!player.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 3 * (i + 1 - 4) / 60 - 15, SCREEN_HEIGHT * 22 / 32}, 0, 2, WHITE);
+        }
+
+        if (!bot.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 3 * (i + 1 + 13 - 4) / 60 - 15, SCREEN_HEIGHT * 22 / 32}, 0, 2, WHITE);
+        }
+    }
+
+    for (int i = 7; i <= 8; i++)
+    {
+        DrawTexture(textures[TEXTURE_SHIP_3], SCREEN_WIDTH * 3 * (i + 1 - 7) / 60, SCREEN_HEIGHT * 51 / 64, WHITE);
+        DrawTexture(textures[TEXTURE_SHIP_3], SCREEN_WIDTH * 3 * (i + 1 + 13 - 7) / 60 - textures[TEXTURE_SHIP_1].width, SCREEN_HEIGHT * 51 / 64, WHITE);
+
+        if (!player.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 3 * (i + 1 - 7) / 60 - textures[TEXTURE_CROSS].width / 2, (float)SCREEN_HEIGHT * 51 / 64 + textures[TEXTURE_CROSS].height / 2}, 0, 2, WHITE);
+        }
+
+        if (!bot.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 3 * (i + 1 + 13 - 7) / 60 - textures[TEXTURE_CROSS].width / 2, (float)SCREEN_HEIGHT * 51 / 64 + textures[TEXTURE_CROSS].height / 2}, 0, 2, WHITE);
+        }
+    }
+    for (int i = 9; i <= 9; i++)
+    {
+        DrawTextureEx(textures[TEXTURE_SHIP_4], Vector2{SCREEN_WIDTH * 9 / 60, SCREEN_HEIGHT * 57 / 64}, -90, 1, WHITE);
+        DrawTextureEx(textures[TEXTURE_SHIP_4], Vector2{(float)SCREEN_WIDTH * 48 / 60 - textures[TEXTURE_SHIP_1].width, SCREEN_HEIGHT * 57 / 64}, -90, 1, WHITE);
+
+        if (!player.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 9 / 60 + textures[TEXTURE_CROSS].width, (float)SCREEN_HEIGHT * 57 / 64 - textures[TEXTURE_CROSS].height * 3 / 2}, 0, 2, WHITE);
+        }
+
+        if (!bot.ships[i].isAfloat)
+        {
+            DrawTextureEx(textures[TEXTURE_CROSS], Vector2{(float)SCREEN_WIDTH * 48 / 60 + textures[TEXTURE_CROSS].width, (float)SCREEN_HEIGHT * 57 / 64 - textures[TEXTURE_CROSS].height * 3 / 2}, 0, 2, WHITE);
         }
     }
 }

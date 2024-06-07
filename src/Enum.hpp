@@ -40,3 +40,24 @@ enum TexturesIndexes
     TEXTURE_SHIP_3,
     TEXTURE_SHIP_4
 };
+
+enum Musics
+{
+    MUSIC_SEA
+};
+
+enum CHUNKS
+{
+    CHUNK_SIREN,
+    CHUNK_SHOUT,
+    CHUNK_SKY,
+    CHUNK_EXPLOSION
+};
+
+enum CHANNELS
+{
+    CHANNEL_SIREN,
+    CHANNEL_SHOUT,
+    CHANNEL_SKY,
+    CHANNEL_EXPLOSION
+};

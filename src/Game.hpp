@@ -1,5 +1,7 @@
 #pragma once
 #include "raylib.h"
+#include "SDL2/SDL_mixer.h"
+#include "SDL2/SDL.h"
 
 #include "Enum.hpp"
 #include "Player.hpp"
@@ -15,6 +17,7 @@ public:
     void update();
     void display();
     void stateTransition();
+    void playSounds();
 
     void placeShipOnField(Ship &, Player &);
     bool isPossibleToPlaceShip(Ship &, int, int, Player &, std::vector<std::vector<Rectangle>> &map, bool botPlacement = false);
@@ -27,9 +30,11 @@ public:
     void drawMap(std::vector<std::vector<Rectangle>> &);
     void drawShips(Player &, bool hideShips = false);
     void drawImages(Player &, std::vector<std::vector<Rectangle>> &);
+    void drawRemainingShips();
 
     void loadFonts();
     void loadTextures();
+    void loadMusics();
 
     int findValue(std::pair<int, int> value);
 
@@ -38,6 +43,9 @@ public:
     std::vector<std::vector<Rectangle>> map;
     std::vector<std::vector<Rectangle>> map2;
 
+    std::vector<Mix_Music *> musics;
+    std::vector<Mix_Chunk *> chunks;
+
 private:
     static const int SCREEN_WIDTH = 1920;
     static const int SCREEN_HEIGHT = 1080;
@@ -45,6 +53,8 @@ private:
     static const int COUNT_FONTS = 1;
     static const int COUNT_IMAGES = 7;
     static const int COUNT_TEXTURES = 7;
+    static const int COUNT_MUSICS = 1;
+    static const int COUNT_CHUNKS = 4;
     std::vector<Font> fonts;
     std::vector<Image> images;
     std::vector<Texture2D> textures;
@@ -67,4 +77,10 @@ private:
     int iPrevMove = -1, jPrevMove = -1;
     bool gotHit = false;
     std::vector<std::pair<int, int>> emptyCellsBot;
+
+    // Sounds
+
+    bool shout = false;
+    bool projectileInShip = false;
+    bool explosion = false;
 };
