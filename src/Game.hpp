@@ -1,7 +1,7 @@
 #pragma once
 #include "raylib.h"
-#include "SDL2/SDL_mixer.h"
-#include "SDL2/SDL.h"
+#include "SDL_mixer.h"
+#include "SDL.h"
 
 #include "Enum.hpp"
 #include "Player.hpp"

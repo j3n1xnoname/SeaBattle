@@ -1,5 +1,5 @@
 #include "raylib.h"
-#include "SDL2/SDL_mixer.h"
+#include "SDL_mixer.h"
 
 #include <ctime>
 #include <cstdlib>
@@ -8,7 +8,7 @@
 #include "Game.hpp"
 #include "Enum.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
     std::srand(std::time(0));
     Game *game = new Game;

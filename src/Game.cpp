@@ -2,6 +2,7 @@
 #include "Enum.hpp"
 
 #include <iostream>
+#include <string>
 
 void Game::fillBot()
 {
